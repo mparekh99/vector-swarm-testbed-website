@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scalable Swarm Robotics with Vectors in GPS-Denied Environments</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Scalable Swarm Robotics with Vectors in GPS-Denied Environments</h1>
+    <p>Mihir Parekh & Kshitij Jerath</p>
+    <p>Emergent Dynamics, Control, and Analytics Lab @ University of Massachusetts Lowell</p>
+  </header>
+
+  <section class="post">
+    <h2>Problem</h2>
+    <p>
+      Biologically inspired swarming algorithms have seen significant development in simulation environments; however real-world experimental validation is essential for verifying their robustness, scalability, and performance under uncertainty. Simulation often abstracts away critical real-world constraints such as sensor noise, communication latency, hardware limitations, and unstructured environments. Experimental testbeds help bridge this gap, providing vital feedback on swarm theory and design.
+    </p>
+
+    <h2>Task</h2>
+    <p>
+      To increase accessibility to experimental swarm testbeds, I proposed building a swarm using commercially available Anki Vector robots. The Anki Vector is a compact differential-drive robot equipped with a camera, IMU, microphone, and accelerometer. The core research question is:
+    </p>
+    <blockquote>
+      Can we build a real-world swarm system using commercially available robots in GPS-denied environments, relying purely on perception?
+    </blockquote>
+
+    <h2>Approach</h2>
+    <p>
+      We developed a centralized perception system to support the design of decentralized swarm behaviors.
+    </p>
+
+    <h3>Modules Implemented:</h3>
+    <ul>
+        <!-- Make Each Clickable -->
+      <li><strong>Online Vector Detection</strong></li>
+      <li><strong>Inter-Robot Distance Estimation</strong></li>
+      <li><strong>Target Following</strong></li>
+      <li><strong>Fixed Landmark Localization</strong></li>
+      <li><strong>Real-Time Pose Estimation using Sensor Fusion</strong></li>
+      <li><strong>Current Work:</strong> Multi-robot localization, scaling up system robustness and communication for larger swarms.</li>
+    </ul>
+
+    <h2>Results</h2>
+
+    Built a robust real-time tracking pipeline to keep track of position and oreintaiton of Vector in 2D world coordinate system. 
+    TALK ABOUT METRICS HERE
+
+
+<!-- ADD SOME OF THE PLOTS  -->
+
+    https://www.youtube.com/watch?v=QOBxQInFjsE 
+  </section>
+</body>
+</html>
