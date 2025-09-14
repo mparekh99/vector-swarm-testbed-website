@@ -4,53 +4,79 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Scalable Swarm Robotics with Vectors in GPS-Denied Environments</title>
+    <!-- MathJax -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 </head>
 <body>
   <header>
     <h1>Scalable Swarm Robotics with Vectors in GPS-Denied Environments</h1>
-    <p>Mihir Parekh & Kshitij Jerath</p>
     <p>Emergent Dynamics, Control, and Analytics Lab @ University of Massachusetts Lowell</p>
   </header>
 
   <section class="post">
-    <h2>Problem</h2>
+    <h2>Overview</h2>
     <p>
-      Biologically inspired swarming algorithms have seen significant development in simulation environments; however real-world experimental validation is essential for verifying their robustness, scalability, and performance under uncertainty. Simulation often abstracts away critical real-world constraints such as sensor noise, communication latency, hardware limitations, and unstructured environments. Experimental testbeds help bridge this gap, providing vital feedback on swarm theory and design.
+      Swarming algorithms have seen significant development in simulation environments; however real-world validation is essential for verifying their robustness, scalability, and performance under uncertainty. Simulation often abstracts away critical real-world constraints, while experimental testbeds bridge the gap, providing feedback on swarm theory and design. To date low-cost testbeds are limited either in their hardware (as a sacrifice for scale), a need for external hardware, or complex set up. We propose to center our testbed on Vector’s, commercially available differential drive mobile robots equipped with an HD Camera and their own processor enabling onboard compute. Our hope is to deliver a reproducible, cost-effective, and scalable testbed to function in GPS-Denied environments.
     </p>
-
-    <h2>Task</h2>
-    <p>
-      To increase accessibility to experimental swarm testbeds, I proposed building a swarm using commercially available Anki Vector robots. The Anki Vector is a compact differential-drive robot equipped with a camera, IMU, microphone, and accelerometer. The core research question is:
-    </p>
-    <blockquote>
-      Can we build a real-world swarm system using commercially available robots in GPS-denied environments, relying purely on perception?
-    </blockquote>
 
     <h2>Approach</h2>
     <p>
-      We developed a centralized perception system to support the design of decentralized swarm behaviors.
+      Off-the-shelf, the Anki Vector is an AI-powered robot companion. However to tailor the robot towards our swarm application, we need to engineer the following local abilities:
+      <ul>
+          <!-- Make Each Clickable -->
+        <li><strong>Online Robot Detection</strong></li>
+        <li><strong>Inter-Robot Distance Estimation</strong></li>
+        <li><strong>Target Following</strong></li>
+        <li><strong>Real time Pose Estimation</strong></li>
+        <li><strong>Inter-Robot Orientation Estimation</strong></li>
+
+      </ul>
+
+      In a decentralized swarm, agents are constantly reacting to their local neighborhoods. This constant process results in collective and emergent behaviors like flocking in birds or diamonds formations in schools of fish. The listed local abilities are performed by each agent, allowing easy scale to more agents. Additionally, each tool is developed with real-time operations in mind. 
     </p>
 
-    <h3>Modules Implemented:</h3>
-    <ul>
-        <!-- Make Each Clickable -->
-      <li><strong>Online Vector Detection</strong></li>
-      <li><strong>Inter-Robot Distance Estimation</strong></li>
-      <li><strong>Target Following</strong></li>
-      <li><strong>Fixed Landmark Localization</strong></li>
-      <li><strong>Real-Time Pose Estimation using Sensor Fusion</strong></li>
-      <li><strong>Current Work:</strong> Multi-robot localization, scaling up system robustness and communication for larger swarms.</li>
-    </ul>
 
-    <h2>Results</h2>
+    <h3>Online Robot Detection</h3>
+    <p>The first objective was to teach a Vector robot to recognize another Vector. To achieve this, we designed and implemented a computer vision pipeline capable of detecting and tracking nearby Vectors. This process began with manually collecting 300 images from the robot’s onboard camera, augmenting the dataset with noise, and labeling each image. We then trained a lightweight YOLO model using transfer learning, leveraging pre-trained object classification to accelerate development and improve accuracy.</p>
 
-    Built a robust real-time tracking pipeline to keep track of position and oreintaiton of Vector in 2D world coordinate system. 
-    TALK ABOUT METRICS HERE
+    <div class="image-grid">
+      <img src="AccuracyObjectDetect.png" alt="Accuracy" />
+      <img src="BoxLossObjectDetect.png" alt="Box Loss" />
+      <img src="PrecisionRecallObjectDetect.png" alt="Precision Recall" />
+      <img src="FinalObjectDetect.png" alt="Final Detection" />
+    </div>
+
+    <p>As shown in the plots, the mean average precision reached near 1 over time, while validation box loss steadily decreased, indicating effective learning. We stopped training at 30 epochs, as loss had nearly converged. Precision and recall also peaked early, suggesting some overfitting may exist, but the performance is acceptable for our use case.</p>
 
 
-<!-- ADD SOME OF THE PLOTS  -->
+    <h3>Inter-Robot Distance Estimation</h3>
+    <p>After detecting a Vector in the frame using our computer vision model, the next step is estimating its distance. On detections, YOLO returns a bounding box around the detected Vector, and using the pinhole camera model, can calculate the camera's focal length. The focal length basically tells us how much an image is scaled. With this focal length, bounding box height, and known real-world height of the Vector, we can estimate the distance. Lastly we use height rather than width, since width varies significantly with orientation.</p>
+
+    <div style="display: flex; max-width: 900px; margin: 0 auto; align-items: center; gap: 1rem;">
+      <div style="flex: 1; text-align: left;">
+        $$ f = \frac{(h_{\text{img}} / 2)}{\tan(\text{FOV} / 2)} $$
+      </div>
+
+      <div style="flex: 1; text-align: right;">
+        $$ \text{dist} = \frac{f \cdot h_{\text{obj}}}{h_{\text{bb}}} $$
+      </div>
+
+      <div style="flex: 1; font-size: 0.9rem; color: #333; line-height: 1.4;">
+        <p><strong>h<sub>img</sub></strong> = height of image</p>
+        <p><strong>h<sub>obj</sub></strong> = height of object</p>
+        <p><strong>h<sub>bb</sub></strong> = height of bounding box</p>
+      </div>
+    </div>
+
+    <img src="EstvsDist_Img.png" alt="Estimated vs Distance" class="standard-image" />
+
+    <p>To collect data for this plot, we positioned a stationary Vector facing forward with a measuring tape placed parallel to it. Initially, the Vector was directly in front of the other Vector’s camera. We then systematically moved the Vector in 10 mm increments, recording both the distance from the tape and the corresponding model reading at each step. This process was repeated for both front-facing and side-facing orientations, comparing the results to the ideal scenario. The distance estimates were generally reasonable, though the model tended to overestimate when the Vector was very close. This inaccuracy is understandable given the difficulty of precise depth estimation at such short ranges. To address this, we plan to apply our recently calculated camera intrinsic calibration, which we expect will improve distance estimates at close range </p>
 
     https://www.youtube.com/watch?v=QOBxQInFjsE 
   </section>
