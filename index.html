@@ -35,7 +35,7 @@
         <li><strong>Inter-Robot Distance Estimation</strong></li>
         <li><strong>Target Following</strong></li>
         <li><strong>Real Time Pose Estimation</strong></li>
-        <li><strong>Inter-Robot Orientation Estimation</strong></li>
+        <!-- <li><strong>Inter-Robot Orientation Estimation</strong></li> -->
 
       </ul>
 
@@ -54,6 +54,12 @@
     </div>
 
     <p>As shown in the plots, the mean average precision reached near 1 over time, while validation box loss steadily decreased, indicating effective learning. We stopped training at 30 epochs, as loss had nearly converged. Precision and recall also peaked early, suggesting some overfitting may exist, but the performance is acceptable for our use case.</p>
+
+
+    <a href="https://github.com/mparekh99/VectorDetection" target="_blank" rel="noopener noreferrer" class="github-button">
+      View Project on GitHub
+    </a>
+
 
 
     <h3>Inter-Robot Distance Estimation</h3>
@@ -102,7 +108,10 @@
       <iframe src="https://www.youtube.com/embed/VU0lt7MGkOM" frameborder="0" allowfullscreen style="position:absolute;width:100%;height:100%;left:0;top:0;"></iframe>
     </div>
 
-
+    <p></p>
+    <a href="https://github.com/mparekh99/vector-target-follower" target="_blank" rel="noopener noreferrer" class="github-button">
+      View Project on GitHub
+    </a>
 
     <h3>Real Time Pose Estimation</h3>
 
@@ -131,12 +140,13 @@
 
     <p>This transformation chain multiplies works because the Marker's cancel out in the multiplication. Here each <strong>T</strong> represents a 4 by 4 homogenous transformation matrix, comprised of a rotation matrix and trasnlation vector. Once performed we can obtain a relatively accurate estimate within our small test area. However, these marker-based “GPS-like” readings can be noisy and unreliable at times. Pose ambiguity can lead to mirrored or incorrect readings, extreme viewing angles cause poor detections, and lighting conditions further affect accuracy. And the biggest challenge is, markers are not always within the camera’s field of view, limiting continuous pose tracking.</p>
 
-    <p>PUT VIDEO OF IT WORKING HERE</p>
-
     <h4>Extended Kalman Filter</h4>
     <p>As discussed previously, while our marker-based localization provides valuable pose estimates, it is inherently noisy and unreliable when markers are not in view. To mitigate these limitations, we implemented a simple odometry-based motion model that performs dead reckoning using wheel speed data. </p>
       <p>However, odometry alone is susceptible to errors such as wheel slippage and accumulates drift over time, making it unsuitable for long-term state estimation. In contrast, camera-based localization is drift-free but can suffer from intermittent inaccuracies and occlusions. To leverage the complementary strengths of both systems, we integrated an <strong>Extended Kalman Filter (EKF)</strong>. The EKF is particularly well-suited for estimating the state of systems with nonlinear dynamics in real time. In our approach, the prediction step of the EKF uses odometry to estimate the next state based on the previous one, while the update step incorporates camera-based observations to correct and refine the prediction. This fusion allows us to maintain a more accurate and robust estimate of the robot’s pose over time.</p> 
     
+
+    <h4>Results</h4>
+    <p>The plots below highlight the sensor fusion performed by the EKF in the video demo. Showcasing how the EKF selectively trusts either the camera-based observations (in orange) or the odometry data (in blue) at different times, illustrating how it performs iterative filtering in real time.</p>
       <div class="wide-image-grid">
         <img src="EKF_X.png" alt="EKF X" />
         <img src="EKF_Y.png" alt="EKF Y" />
@@ -153,8 +163,12 @@
         </iframe>
       </div>
 
+    <p></p>
+    <a href="https://github.com/mparekh99/vector-ekf-marker-localization" target="_blank" rel="noopener noreferrer" class="github-button">
+      View Project on GitHub
+    </a>
 
-    <h3>Future Work</h3>
+    <h2>Future Work</h2>
       <p>A key limitation of our current approach is the assumption of a small operating space. While localization performs reliably within a 400 x 400 millimeter area, it does not scale effectively to larger environments. Our goal is to achieve consistent localization within a 2 meter by 2 meter space. This challenge motivates exploring new strategies, such as leveraging interactions between multiple agents to enhance localization accuracy. Additionally, we aim to identify which specific Vector we are observing, potentially enabling the implementation of a novel method inspired by the recent work of Radhika Nagpal in Strategic Sacrifice: Self-Organized Robot Swarm Localization for Inspection Productivity.</p>
 
   
