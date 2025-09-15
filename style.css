@@ -61,11 +61,36 @@ header p {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 .standard-image {
-  max-width: 500px; /* About half your container width */
+  max-width: 450px; /* About half your container width */
   width: 100%;
   height: auto;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: block;
   margin: 2rem auto; /* Center and add vertical spacing */
+}
+.small-image {
+  max-width: 200px; /* Smaller than 450px */
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 2rem auto; /* Center and add vertical spacing */
+}
+
+
+.wide-image-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Single column */
+  gap: 2rem;                 /* Space between images */
+  max-width: 1000px;         /* Wider container */
+  margin: 2rem auto;         /* Center the grid */
+}
+
+.wide-image-grid img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

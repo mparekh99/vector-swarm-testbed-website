@@ -16,6 +16,7 @@
 <body>
   <header>
     <h1>Scalable Swarm Robotics with Vectors in GPS-Denied Environments</h1>
+    <p>Mihir Parekh</p>
     <p>Emergent Dynamics, Control, and Analytics Lab @ University of Massachusetts Lowell</p>
   </header>
 
@@ -33,7 +34,7 @@
         <li><strong>Online Robot Detection</strong></li>
         <li><strong>Inter-Robot Distance Estimation</strong></li>
         <li><strong>Target Following</strong></li>
-        <li><strong>Real time Pose Estimation</strong></li>
+        <li><strong>Real Time Pose Estimation</strong></li>
         <li><strong>Inter-Robot Orientation Estimation</strong></li>
 
       </ul>
@@ -76,9 +77,87 @@
 
     <img src="EstvsDist_Img.png" alt="Estimated vs Distance" class="standard-image" />
 
-    <p>To collect data for this plot, we positioned a stationary Vector facing forward with a measuring tape placed parallel to it. Initially, the Vector was directly in front of the other Vector’s camera. We then systematically moved the Vector in 10 mm increments, recording both the distance from the tape and the corresponding model reading at each step. This process was repeated for both front-facing and side-facing orientations, comparing the results to the ideal scenario. The distance estimates were generally reasonable, though the model tended to overestimate when the Vector was very close. This inaccuracy is understandable given the difficulty of precise depth estimation at such short ranges. To address this, we plan to apply our recently calculated camera intrinsic calibration, which we expect will improve distance estimates at close range </p>
+    <p>To collect data for this plot, we positioned a stationary Vector facing forward with a measuring tape placed parallel to it. Initially, the Vector was directly in front of the other Vector’s camera. We then systematically moved the Vector in 10 mm increments, recording both the distance from the tape and the corresponding model reading at each step. This process was repeated for both front-facing and side-facing orientations, comparing the results to the ideal scenario. The distance estimates were generally reasonable, though the model tended to overestimate when the Vector was very close. This inaccuracy is understandable given the difficulty of precise depth estimation at such short ranges. To address this, we plan to apply our recently calculated camera intrinsic calibration, which we expect will improve distance estimates at close range.</p>
 
-    https://www.youtube.com/watch?v=QOBxQInFjsE 
+
+    <h3>Target Following</h3>
+    <p>Within an agent's local neighborhood, it operates according to three primary objectives: maintaining personal space from nearby agents, orienting toward individuals at an optimal distance, and seeking out others if it finds itself isolated. Target following enables the agent to pursue a detected target, in the case of isolation. To accomplish target following, we employed a simplified kinematic state feedback controller. By leveraging the Vector’s dynamics, we can control its motion to follow a target both quickly and accurately using only linear and angular gains. The control law used is given by the following equation:</p>
+
+    <div style="display: flex; max-width: 900px; margin: 1rem auto 0; align-items: center; gap: 1rem; padding: 1rem; font-size: 1.1rem;">
+      <div style="flex: 1; text-align: left;">
+        $$ v = k_p \cdot p $$
+        $$ \omega = k_\alpha \cdot \alpha $$
+      </div>
+
+      <div style="flex: 1; color: #333; line-height: 1.4;">
+        <p><strong>p</strong>: distance to the target</p>
+        <p><strong>𝛼</strong>: angle to the target</p>
+        <p><strong>k<sub>p</sub></strong>: linear gain</p>
+        <p><strong>k<sub>𝛼</sub></strong>: angular gain</p>
+      </div>
+    </div>
+
+
+    <div class="video-container" style="position:relative;width:100%;height:0;padding-bottom:56.25%;overflow:hidden;">
+      <iframe src="https://www.youtube.com/embed/VU0lt7MGkOM" frameborder="0" allowfullscreen style="position:absolute;width:100%;height:100%;left:0;top:0;"></iframe>
+    </div>
+
+
+
+    <h3>Real Time Pose Estimation</h3>
+
+    <p>Knowing a neighbor's orientation is crucial for developing a swarm, as an agent will align itself with a neighbor if that neighbor lies within an optimal distance threshold. Individual pose estimation is essential for enabling coordinated collective behavior. We implemented this using OpenCV’s ArUco markers, homogeneous frame transformations, and an Extended Kalman Filter for smooth and accurate real-time pose estimation. An initial step was to develop a centralized perception system that would maitain all active poses of deployed Vectors.</p>
+
+    <h4>Aruco Marker Setup</h4>
+    <p>Our starting test environment consists of a 400 x 400 milimeter square space, with eight markers along the edges. A picture can be seen below: </p>
+
+    <img src="Marker_pic.jpg" alt="Marker Pic" class="small-image" />
+
+    <h4>Fixed Landmark Localization</h4>
+    <p>After calibrating the camera, we leveraged these markers as fixed reference points to estimate the robot’s pose within a global frame. We define the global frame as a 2D coordinate system (x,y). When the Vector’s camera captures a raw image, it searches for visible markers. If a marker is detected, we retrieve its pose relative to the camera frame. Referring to the transformation chain below, our end objective is to get the camera in global frame.</p>
+
+    <p>
+      $$ {}^{\text{Global}}\mathbf{T}_{\text{Camera}} = {}^{\text{Global}}\mathbf{T}_{\text{Marker}} \cdot \left({}^{\text{Camera}}\mathbf{T}_{\text{Marker}}\right)^{-1} $$
+    </p>
+    <p style="text-align: center;">
+      $$ \Downarrow $$
+    </p>
+
+    <p>
+      $$ {}^{\text{Global}}\mathbf{T}_{\text{Camera}} = {}^{\text{Global}}\mathbf{T}_{\text{Marker}} \cdot {}^{\text{Marker}}\mathbf{T}_{\text{Camera}} $$
+    </p>
+
+
+
+    <p>This transformation chain multiplies works because the Marker's cancel out in the multiplication. Here each <strong>T</strong> represents a 4 by 4 homogenous transformation matrix, comprised of a rotation matrix and trasnlation vector. Once performed we can obtain a relatively accurate estimate within our small test area. However, these marker-based “GPS-like” readings can be noisy and unreliable at times. Pose ambiguity can lead to mirrored or incorrect readings, extreme viewing angles cause poor detections, and lighting conditions further affect accuracy. And the biggest challenge is, markers are not always within the camera’s field of view, limiting continuous pose tracking.</p>
+
+    <p>PUT VIDEO OF IT WORKING HERE</p>
+
+    <h4>Extended Kalman Filter</h4>
+    <p>As discussed previously, while our marker-based localization provides valuable pose estimates, it is inherently noisy and unreliable when markers are not in view. To mitigate these limitations, we implemented a simple odometry-based motion model that performs dead reckoning using wheel speed data. </p>
+      <p>However, odometry alone is susceptible to errors such as wheel slippage and accumulates drift over time, making it unsuitable for long-term state estimation. In contrast, camera-based localization is drift-free but can suffer from intermittent inaccuracies and occlusions. To leverage the complementary strengths of both systems, we integrated an <strong>Extended Kalman Filter (EKF)</strong>. The EKF is particularly well-suited for estimating the state of systems with nonlinear dynamics in real time. In our approach, the prediction step of the EKF uses odometry to estimate the next state based on the previous one, while the update step incorporates camera-based observations to correct and refine the prediction. This fusion allows us to maintain a more accurate and robust estimate of the robot’s pose over time.</p> 
+    
+      <div class="wide-image-grid">
+        <img src="EKF_X.png" alt="EKF X" />
+        <img src="EKF_Y.png" alt="EKF Y" />
+      </div>
+
+
+      
+      <div class="video-container" style="position:relative; width:100%; height:0; padding-bottom:56.25%; overflow:hidden; margin: 1rem 0;">
+        <iframe 
+          src="https://www.youtube.com/embed/QOBxQInFjsE" 
+          frameborder="0" 
+          allowfullscreen 
+          style="position:absolute; width:100%; height:100%; left:0; top:0;">
+        </iframe>
+      </div>
+
+
+    <h3>Future Work</h3>
+      <p>A key limitation of our current approach is the assumption of a small operating space. While localization performs reliably within a 400 x 400 millimeter area, it does not scale effectively to larger environments. Our goal is to achieve consistent localization within a 2 meter by 2 meter space. This challenge motivates exploring new strategies, such as leveraging interactions between multiple agents to enhance localization accuracy. Additionally, we aim to identify which specific Vector we are observing, potentially enabling the implementation of a novel method inspired by the recent work of Radhika Nagpal in Strategic Sacrifice: Self-Organized Robot Swarm Localization for Inspection Productivity.</p>
+
+  
   </section>
 </body>
 </html>
