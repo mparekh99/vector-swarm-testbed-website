@@ -14,15 +14,17 @@ body {
 
 /* Table of Contents (Left Column) */
 .toc-column {
+   margin-left: 50px;  
   width: 15%;
   padding: 20px;
   position: sticky;
   top: 110px;
   height: calc(100vh - 110px);
   overflow-y: auto;
-  background-color: #f0f0ea;
-  border-right: 1px solid #ddd;
-  box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1);
+  /* background-color: #f0f0ea; */
+  background-color: #fffff8;
+  /* border-right: 1px solid #ddd; */
+  /* box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1); */
   display: flex;
   flex-direction: column;
 }
@@ -37,12 +39,12 @@ body {
 
 .toc-column ul {
   list-style: none;
-  padding-left: 15px;
+  padding-left: 16px;
   color: black;
 }
 
 .toc-column li {
-  margin: 8px 0;
+  margin: 10px 0;
   color: black;
   white-space: nowrap;
   overflow: hidden;
@@ -58,10 +60,13 @@ body {
   vertical-align: middle;
 }
 
+
 .github-button {
-  display: inline-block;
+  display: block;           /* makes it take up a full line */
+  width: fit-content;       /* shrinks to fit the content */
+  margin: 20px auto;        /* centers horizontally */
   background-color: #eee;
-  color: #24292e; /* GitHub dark gray */
+  color: #24292e;
   border: 1px solid #d1d5da;
   border-radius: 6px;
   padding: 8px 16px;
@@ -88,14 +93,14 @@ body {
 .image-pair {
   display: flex;
   justify-content: center;
-  gap: 30px;             /* space between images */
+  gap: 15px;             /* space between images */
   flex-wrap: nowrap;     /* force one line */
   margin: 20px auto;
   max-width: 900px;      /* increased from 800px */
 }
 
 .image-pair img {
-  width: 48%;            /* slightly larger than before */
+  width: 50%;            /* slightly larger than before */
   max-width: none;       /* allow width to control size */
   height: auto;
   object-fit: contain;
@@ -103,12 +108,17 @@ body {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Main Content (Middle Column) */
+
+/* Main Content (Middle Column) - Blog Style */
 .content-column {
-  width: 68%;
-  padding: 20px 60px 40px; /* controls left and right indentation */
+  width: 100%;
+  max-width: 750px;        /* typical readable blog width */
+  margin: 0 auto;          /* center the content */
+  padding: 20px 30px 40px; /* reasonable padding for readability */
   color: #222;
+  box-sizing: border-box;
 }
+
 
 /* Center only main page title */
 .content-column > h1 {
@@ -156,15 +166,6 @@ body {
 }
 
 
-.content-column ul,
-.content-column ol {
-  padding-left: 40px; /* Indents the bullets */
-  margin-top: 20px;
-  margin-bottom: 20px;
-  color: #222;
-  text-align: left;
-}
-
 /* Other paragraphs */
 .content-column p:not(.section-header + p) {
   margin-top: 20px;
@@ -174,14 +175,16 @@ body {
   /* start flush with content-column padding */
 }
 
-/* Lists inside content-column */
 .content-column ul,
 .content-column ol {
+  padding-left: 40px; /* good indentation */
   margin-top: 20px;
   margin-bottom: 20px;
-  padding-left: 20px; /* indent bullet points */
   color: #222;
+  text-align: left;
+  list-style-position: outside; /* default, bullets outside padding */
 }
+
 
 /* GIF Column (Right Column) */
 .gif-column {
@@ -204,6 +207,10 @@ body {
   height: auto;
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.centered-img {
+  display: block;
+  margin: 0 auto;
 }
 
 
@@ -264,7 +271,7 @@ body {
 #distance img {
   display: block;        /* make the image block to allow margin auto */
   margin: 20px auto;     /* center horizontally with vertical spacing */
-  max-width: 60%;        /* shrink the image to 80% of its container width */
+  max-width: 70%;        /* shrink the image to 80% of its container width */
   height: auto;          /* maintain aspect ratio */
   max-height: 400px;     /* optional max height */
   border-radius: 6px;    /* optional: nice rounded corners */
