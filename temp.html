@@ -58,11 +58,14 @@
             <img src="FinalObjectDetect.png" alt="Final Detection" />
         </div>
         <p>As shown in the plots, the mean average precision reached near 1 over time, while validation box loss steadily decreased, indicating effective learning. We stopped training at 30 epochs, as loss had nearly converged. Precision and recall also peaked early, suggesting some overfitting may exist, but the performance is acceptable for our use case.</p>
-    </section>
+        <a class="github-button" href="https://github.com/mparekh99/VectorDetection" target="_blank" rel="noopener noreferrer">
+          View Project Here
+        </a>
+      </section>
 
       <section id="distance">
         <h3 class="section-header">Inter-Robot Distance Estimation</h3>
-        <p>After detecting a Vector in the frame using our computer vision model, the next step is estimating its distance. On detections, YOLO returns a bounding box around the detected Vector, and using the pinhole camera model, can calculate the camera's focal length. The focal length basically tells us how much an image is scaled. With this focal length, bounding box height, and known real-world height of the Vector, we can estimate the distance. Lastly we use height rather than width, since width varies significantly with orientation.</p>
+        <p>After detecting a Vector in the frame using our computer vision model, the next step is estimating its distance. On detections, YOLO returns a bounding box around the detected Vector, and using the pinhole camera model we can calculate the camera's focal length. The focal length basically tells us how much an image is scaled. With this focal length, bounding box height, and known real-world height of the Vector, we can estimate the distance. Lastly we use height rather than width, since width varies significantly with orientation.</p>
         
         <div class="equations-container">
             <div class="equation">
@@ -82,34 +85,42 @@
 
         <img src="EstvsDist_Img.png" alt="Estimated vs Distance"/>
         
-        <p>To collect data for this plot, we positioned a stationary Vector facing forward with a measuring tape placed parallel to it. Initially, the Vector was directly in front of the other Vector’s camera. We then systematically moved the Vector in 10 mm increments, recording both the distance from the tape and the corresponding model reading at each step. This process was repeated for both front-facing and side-facing orientations, comparing the results to the ideal scenario. The distance estimates were generally reasonable, though the model tended to overestimate when the Vector was very close. This inaccuracy is understandable given the difficulty of precise depth estimation at such short ranges. To address this, we plan to apply our recently calculated camera intrinsic calibration, which we expect will improve distance estimates at close range.</p>
+        <p>To collect data for this plot, we positioned a stationary Vector robot facing forward, aligned with a measuring tape placed parallel to it. Starting with the Vector directly in front of the observing Vector’s camera, we incrementally moved it away in 10 mm steps. At each position, we recorded both the tape-measured distance and the corresponding distance estimated by the model. This procedure was conducted for both front-facing and side-facing orientations, allowing us to compare results against the ideal case. Overall, the distance estimates were reasonably accurate, although the model tended to overestimate distances when the target Vector was very close. This inaccuracy is likely due to the lack of camera calibration. To improve performance at close range, we plan to apply our recently computed intrinsic camera calibration, which we expect will yield more precise distance estimates.</p>
     </section>
 
       <section id="following">
         <h3 class="section-header">Target Following</h3>
-        <p>Within an agent's local neighborhood, it operates according to three primary objectives: maintaining personal space from nearby agents, orienting toward individuals at an optimal distance, and seeking out others if it finds itself isolated. Target following enables the agent to pursue a detected target, in the case of isolation. To accomplish target following, we employed a simplified kinematic state feedback controller. By leveraging the Vector’s dynamics, we can control its motion to follow a target both quickly and accurately using only linear and angular gains. The control law used is given by the following equation:</p>
-        <div class="equations-container">
-            <div class="equation">
-                $$ v = k_p \cdot p $$
-            </div>
-            <div class="equation">
-              $$ \omega = k_\alpha \cdot \alpha $$
-            </div>
-            <div class="equation-definitions">
-                  <ul>
-                    <li><strong>p</strong>: distance to the target</li>
-                    <li><strong>𝛼</strong>: angle to the target</li>
-                    <li><strong>k<sub>p</sub></strong>: linear gain</li>
-                    <li><strong>k<sub>𝛼</sub></strong>: angular gain</li>
-                </ul>
-            </div>
+        <p>Within an agent's local neighborhood, behavior is governed by three primary objectives: maintaining personal space from nearby agents, aligning with others at an optimal distance, and seeking companionship when isolated. In the case of isolation, target following allows the agent to pursue a detected target to rejoin the swarm. </p>
+
+        <p>Initially, we implemented the PID controller, tuning its gains through trial and error to minimize oscillations and achieve smooth convergence toward the target. In our setup, the target is a detected Vector robot within the camera frame, and the PID controller iteratively adjusts the trajectory to reach it. Alternatively, we designed a Kinematic State Feedback Controller based on the standard motion model of a differential drive robot, applying a control law to directly regulate the robot’s position and orientation.</p>
+
+
+        <video width="500" height="300" controls>
+            <source src="Target Follow TWO - Made with Clipchamp.mp4" type="video/mp4">
+        </video>
+        <p></p>
+        <h4>Comparative Evaluation of Follow Methods</h4>
+        <p>To determine the best approach for Vector target following, we tested two scenarios, following a stationary target and following a moving target, as demonstrated in the video above. Each scenario was evaluated by running five iterations for both the PID and Kinematic controllers to ensure comprehensive coverage and reliable results.</p>
+
+        <h4 style="text-align: center;">Stationary Target Test</h4>
+        <div class="image-pair">
+          <img src="stat_plot1.png" alt="SHOW PID WORKING" />
+          <img src="stat_plot.png" alt="WHICH IS FASTER" />
         </div>
 
-        <!-- ADD PID to show comparison -->
+        <h4 style="text-align: center;">Moving Target Test</h4>
+        <div class="image-pair">
+          <img src="move_plot.png" alt="SHOW PID WORKING" />
+          <img src="move_ploted.png" alt="WHICH IS FASTER" />
+        </div>
 
-        <video width="500" height="400" controls>
-            <source src="VectorProgress - Made with Clipchamp.mp4" type="video/mp4">
-            </video>
+        <p>The figures above highlight how the PID controller effectively reduces oscillations over time, particularly when compared to the sharper angular adjustments exhibited by the kinematic state feedback controller. However, the second set of plots in both scenarios reveals an even more important insight: the kinematic controller consistently reaches the target in less time than the PID controller. This faster convergence demonstrates the efficiency of using a control law derived from the robot's motion model.
+        </p>
+        <p>Unlike PID, which requires manual tuning and can behave unpredictably in dynamic environments, the kinematic controller offers a more structured and scalable solution. By eliminating the need for iterative gain adjustment, it simplifies deployment and ensures more consistent performance. This makes it especially well-suited for swarm robotics, where efficiently managing large numbers of agents is crucial.</p>
+        <a class="github-button" href="https://github.com/mparekh99/vector-target-follower" target="_blank" rel="noopener noreferrer">
+          View Project Here
+        </a>
+        
     </section>
 
       <section id="pose">
@@ -118,7 +129,7 @@
         <h4>Aruco Marker Setup</h4>
           <p>Our starting test environment consists of a 400 x 400 milimeter square space, with eight markers along the edges. A picture can be seen below:</p>
           <img src="Marker_pic.jpg" alt="Marker Pic" class="small-image" />
-
+          <p></p>
           <h4>Fixed Landmark Localization</h4>
           <p>After calibrating the camera, we leveraged these markers as fixed reference points to estimate the robot’s pose within a global frame. We define the global frame as a 2D coordinate system (x,y). When the Vector’s camera captures a raw image, it searches for visible markers. If a marker is detected, we retrieve its pose relative to the camera frame. Referring to the transformation chain below, our end objective is to get the camera in global frame.</p>
           <p> $$ {}^{\text{Global}}\mathbf{T}_{\text{Camera}} = {}^{\text{Global}}\mathbf{T}_{\text{Marker}} \cdot \left({}^{\text{Camera}}\mathbf{T}_{\text{Marker}}\right)^{-1} $$ </p>
@@ -140,11 +151,12 @@
         <video width="500" height="400" controls>
             <source src="Longer_Vector_Vid - Made with Clipchamp (1).mp4" type="video/mp4">
         </video>
-
-
-          <a href="https://github.com/mparekh99/vector-ekf-marker-localization" target="_blank" rel="noopener noreferrer" class="github-button"> View Project on GitHub </a>
         
      </section>
+     <p></p>
+      <a class="github-button" href="https://github.com/mparekh99/vector-ekf-marker-localization" target="_blank" rel="noopener noreferrer">
+          View Project Here
+        </a>
     </section>
 
     <section id="limitations">
