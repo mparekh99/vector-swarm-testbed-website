@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Swarm Blog</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <link rel="stylesheet" href="temp.css" />
+</head>
+<body>
+
+  <!-- Left: Table of Contents -->
+  <nav class="toc-column">
+    <h2>Table of Contents</h2>
+    <ul>
+      <li><a href="#overview" title="Overview">Overview</a></li>
+      <li><a href="#approach" title="Approach">Approach</a></li>
+      <ul>
+        <li><a href="#detection" title="Robot Detection">Robot Detection</a></li>
+        <li><a href="#distance" title="Distance Estimation">Distance Estimation</a></li>
+        <li><a href="#following" title="Target Following">Target Following</a></li>
+        <li><a href="#pose" title="Pose Estimation">Pose Estimation</a></li>
+      </ul>
+      <li><a href="#limitations" title="Limitations">Limitations</a></li>
+      <li><a href="#future" title="Future Work">Future Work</a></li>
+    </ul>
+  </nav>
+
+  <!-- Middle: Main Content -->
+  <main class="content-column">
+    <h1>Scalable Swarm Robotics in GPS-Denied Environments</h1>
+
+    <section id="overview">
+      <h2 class="section-header">Overview</h2>
+      <p>Swarm algorithms have seen significant development in simulation environments; however real-world validation is essential for verifying their robustness, scalability, and performance under uncertainty. Simulation often abstracts away critical real-world constraints, while experimental testbeds bridge the gap, providing feedback on swarm theory and design. We propose a testbed using Anki Vector’s, commercially available differential drive mobile robots equipped with an HD Camera and their own processor enabling onboard compute. Our hope is to deliver a scalable swarm testbed that can operate in GPS-denied environments.</p>
+    </section>
+
+    <section id="approach">
+      <h2 class="section-header">Approach</h2>
+      <p>Off-the-shelf, the Anki Vector is an AI-powered robot companion. However to tailor the robot towards our swarm application, we need to engineer the following local abilities:</p>
+        <ul>
+          <li><strong>Online Robot Detection</strong></li>
+          <li><strong>Inter-Robot Distance Estimation</strong></li>
+          <li><strong>Target Following</strong></li>
+          <li><strong>Real Time Pose Estimation</strong></li>
+        </ul>
+
+      <p>In a decentralized swarm, agents are constantly reacting to their local neighborhoods. This constant process results in collective and emergent behaviors like flocking in birds or diamonds formations in schools of fish. The listed local abilities are performed by each agent, allowing easy scale to more agents. Additionally, each tool is developed with real-time operations in mind.</p>
+
+      <section id="detection">
+        <h3 class="section-header">Online Robot Detection</h3>
+        <p>The first objective was to teach a Vector robot to recognize another Vector. To achieve this, we designed and implemented a computer vision pipeline capable of detecting and tracking nearby Vectors. This process began with manually collecting 300 images from the robot’s onboard camera, augmenting the dataset with noise, and labeling each image. We then trained a lightweight YOLO model using transfer learning, leveraging pre-trained object classification to accelerate development and improve accuracy.</p>
+        <div class="image-grid">
+            <img src="AccuracyObjectDetect.png" alt="Accuracy" />
+            <img src="BoxLossObjectDetect.png" alt="Box Loss" />
+            <img src="PrecisionRecallObjectDetect.png" alt="Precision Recall" />
+            <img src="FinalObjectDetect.png" alt="Final Detection" />
+        </div>
+        <p>As shown in the plots, the mean average precision reached near 1 over time, while validation box loss steadily decreased, indicating effective learning. We stopped training at 30 epochs, as loss had nearly converged. Precision and recall also peaked early, suggesting some overfitting may exist, but the performance is acceptable for our use case.</p>
+        <a class="github-button" href="https://github.com/mparekh99/VectorDetection" target="_blank" rel="noopener noreferrer">
+          View Project Here
+        </a>
+      </section>
+
+      <section id="distance">
+        <h3 class="section-header">Inter-Robot Distance Estimation</h3>
+        <p>After detecting a Vector in the frame using our computer vision model, the next step is estimating its distance. On detections, YOLO returns a bounding box around the detected Vector, and using the pinhole camera model we can calculate the camera's focal length. The focal length basically tells us how much an image is scaled. With this focal length, bounding box height, and known real-world height of the Vector, we can estimate the distance. Lastly we use height rather than width, since width varies significantly with orientation.</p>
+        
+        <div class="equations-container">
+            <div class="equation">
+            $$ f = \frac{(h_{\text{img}} / 2)}{\tan(\text{FOV} / 2)} $$
+            </div>
+            <div class="equation">
+            $$ \text{dist} = \frac{f \cdot h_{\text{obj}}}{h_{\text{bb}}} $$
+            </div>
+            <div class="equation-definitions">
+                  <ul>
+                    <li><strong>h<sub>img</sub></strong> = height of image</li>
+                    <li><strong>h<sub>obj</sub></strong> = height of object</li>
+                    <li><strong>h<sub>bb</sub></strong> = height of bounding box</li>
+                </ul>
+            </div>
+        </div>
+
+        <img src="EstvsDist_Img.png" alt="Estimated vs Distance"/>
+        
+        <p>To collect data for this plot, we positioned a stationary Vector robot facing forward, aligned with a measuring tape placed parallel to it. Starting with the Vector directly in front of the observing Vector’s camera, we incrementally moved it away in 10 mm steps. At each position, we recorded both the tape-measured distance and the corresponding distance estimated by the model. This procedure was conducted for both front-facing and side-facing orientations, allowing us to compare results against the ideal case. Overall, the distance estimates were reasonably accurate, although the model tended to overestimate distances when the target Vector was very close. This inaccuracy is likely due to the lack of camera calibration. To improve performance at close range, we plan to apply our recently computed intrinsic camera calibration, which we expect will yield more precise distance estimates.</p>
+    </section>
+
+      <section id="following">
+        <h3 class="section-header">Target Following</h3>
+        <p>Within an agent's local neighborhood, behavior is governed by three primary objectives: maintaining personal space from nearby agents, aligning with others at an optimal distance, and seeking companionship when isolated. In the case of isolation, target following allows the agent to pursue a detected target to rejoin the swarm. </p>
+
+        <p>Initially, we implemented the PID controller, tuning its gains through trial and error to minimize oscillations and achieve smooth convergence toward the target. In our setup, the target is a detected Vector robot within the camera frame, and the PID controller iteratively adjusts the trajectory to reach it. Alternatively, we designed a Kinematic State Feedback Controller based on the standard motion model of a differential drive robot, applying a control law to directly regulate the robot’s position and orientation.</p>
+
+
+        <div class="video-row">
+          <video controls>
+            <source src="Small_Stat - Made with Clipchamp.mp4" type="video/mp4">
+          </video>
+
+          <video controls>
+            <source src="Small_Mov - Made with Clipchamp.mp4" type="video/mp4">
+          </video>
+        </div>
+
+        <h4>Comparative Evaluation of Follow Methods</h4>
+        <p>To determine the best approach for Vector target following, we tested two scenarios, following a stationary target and following a moving target, as demonstrated in the videos above. Each scenario was evaluated by running five iterations for both the PID and Kinematic controllers to ensure comprehensive coverage and reliable results.</p>
+
+        <h4 style="text-align: center;">Stationary Target Test</h4>
+        <div class="image-pair">
+          <img src="stat_plot1.png" alt="SHOW PID WORKING" />
+          <img src="stat_plot.png" alt="WHICH IS FASTER" />
+        </div>
+
+        <h4 style="text-align: center;">Moving Target Test</h4>
+        <div class="image-pair">
+          <img src="move_plot.png" alt="SHOW PID WORKING" />
+          <img src="move_ploted.png" alt="WHICH IS FASTER" />
+        </div>
+
+        <p>The figures above highlight how the PID controller effectively reduces oscillations over time, particularly when compared to the sharper angular adjustments exhibited by the kinematic state feedback controller. However, the second set of plots in both scenarios reveals an even more important insight: the kinematic controller consistently reaches the target in less time than the PID controller. This faster convergence demonstrates the efficiency of using a control law derived from the robot's motion model.
+        </p>
+        <p>Unlike PID, which requires manual tuning and can behave unpredictably in dynamic environments, the kinematic controller offers a more structured and scalable solution. By eliminating the need for iterative gain adjustment, it simplifies deployment and ensures more consistent performance. This makes it especially well-suited for swarm robotics, where efficiently managing large numbers of agents is crucial.</p>
+        <a class="github-button" href="https://github.com/mparekh99/vector-target-follower" target="_blank" rel="noopener noreferrer">
+          View Project Here
+        </a>
+        
+    </section>
+
+      <section id="pose">
+        <h3 class="section-header">Real-Time Pose Estimation</h3>
+        <p>Knowing a neighbor's orientation is crucial for developing a swarm, as an agent will align itself with a neighbor if that neighbor lies within an optimal distance threshold. Individual pose estimation is essential for enabling coordinated collective behavior. We implemented this using OpenCV’s ArUco markers, homogeneous frame transformations, and an Extended Kalman Filter for smooth and accurate real-time pose estimation. An initial step was to develop a centralized perception system that would maitain all active poses of deployed Vectors.</p>
+        <h4>Aruco Marker Setup</h4>
+          <p>Our starting test environment consists of a 400 x 400 milimeter square space, with eight markers along the edges. A picture can be seen below:</p>
+          <img src="Marker_pic.jpg" alt="Marker Pic" class="small-image" />
+          <p></p>
+          <h4>Fixed Landmark Localization</h4>
+          <p>After calibrating the camera, we leveraged these markers as fixed reference points to estimate the robot’s pose within a global frame. We define the global frame as a 2D coordinate system (x,y). When the Vector’s camera captures a raw image, it searches for visible markers. If a marker is detected, we retrieve its pose relative to the camera frame. Referring to the transformation chain below, our end objective is to get the camera in global frame.</p>
+          <p> $$ {}^{\text{Global}}\mathbf{T}_{\text{Camera}} = {}^{\text{Global}}\mathbf{T}_{\text{Marker}} \cdot \left({}^{\text{Camera}}\mathbf{T}_{\text{Marker}}\right)^{-1} $$ </p>
+          <p style="text-align: center;"> $$ \Downarrow $$ </p>
+          <p> $$ {}^{\text{Global}}\mathbf{T}_{\text{Camera}} = {}^{\text{Global}}\mathbf{T}_{\text{Marker}} \cdot {}^{\text{Marker}}\mathbf{T}_{\text{Camera}} $$ </p>
+          <p>This transformation chain multiplies works because the Marker's cancel out in the multiplication. Here each <strong>T</strong> represents a 4 by 4 homogenous transformation matrix, comprised of a rotation matrix and trasnlation vector. Once performed we can obtain a relatively accurate estimate within our small test area. However, these marker-based “GPS-like” readings can be noisy and unreliable at times. Pose ambiguity can lead to mirrored or incorrect readings, extreme viewing angles cause poor detections, and lighting conditions further affect accuracy. And the biggest challenge is, markers are not always within the camera’s field of view, limiting continuous pose tracking.</p>
+
+          <h4>Extended Kalman Filter</h4>
+          <p>As discussed previously, while our marker-based localization provides valuable pose estimates, it is inherently noisy and unreliable when markers are not in view. To mitigate these limitations, we implemented a simple odometry-based motion model that performs dead reckoning using wheel speed data.</p>
+          <p>However, odometry alone is susceptible to errors such as wheel slippage and accumulates drift over time, making it unsuitable for long-term state estimation. In contrast, camera-based localization is drift-free but can suffer from intermittent inaccuracies and occlusions. To leverage the complementary strengths of both systems, we integrated an <strong>Extended Kalman Filter (EKF)</strong>. The EKF is particularly well-suited for estimating the state of systems with nonlinear dynamics in real time. In our approach, the prediction step of the EKF uses odometry to estimate the next state based on the previous one, while the update step incorporates camera-based observations to correct and refine the prediction. This fusion allows us to maintain a more accurate and robust estimate of the robot’s pose over time.</p>
+
+          <h4>Results</h4>
+          <p>The plots below highlight the sensor fusion performed by the EKF in the video demo. Showcasing how the EKF selectively trusts either the camera-based observations (in orange) or the odometry data (in blue) at different times, illustrating how it performs iterative filtering in real time.</p>
+        <div class="ekf-images">
+        <img src="EKF_X.png" alt="EKF X" />
+        <img src="EKF_Y.png" alt="EKF Y" />
+        </div>
+
+
+        <div style="transform: scale(0.8); transform-origin: top center; margin: 1rem 0;">
+          <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; overflow:hidden;">
+            <iframe 
+              src="https://www.youtube.com/embed/QOBxQInFjsE" 
+              frameborder="0" 
+              allowfullscreen 
+              style="position:absolute; width:100%; height:100%; left:0; top:0;">
+            </iframe>
+          </div>
+        </div>
+
+        <!-- <video width="500" height="400" controls>
+            <source src="Longer_Vector_Vid - Made with Clipchamp (1).mp4" type="video/mp4">
+        </video> -->
+        
+     </section>
+      <a class="github-button" href="https://github.com/mparekh99/vector-ekf-marker-localization" target="_blank" rel="noopener noreferrer">
+          View Project Here
+        </a>
+    </section>
+
+    <section id="limitations">
+      <h2 class="section-header">Limitations & Challenges</h2>
+      <p>Sequential development of individual tools has helped us progressively transform the off-the-shelf Vector robot into a more intelligent and capable agent. However, we are still far from achieving our goal of building a fully functional swarm testbed. A key limitation is the lack of a reliable method for determining a neighbor’s orientation. Our current approach uses a centralized perception system, where each robot's pose is published in real time to a central server. While this works well within a small 400 x 400 mm operating space, it does not scale effectively to larger environments. Expanding to areas such as a 2 x 2 meter workspace, several challenges emerge. Marker visibility decreases significantly, leading to increased pose ambiguity at greater distances, along with more general sensor noise. In regions where markers become unreliable or completely occluded, the system must fall back on dead reckoning. Resulting in increased drift and a higher likelihood of inter-agent collisions.</p>
+    </section>
+
+    <section id="future">
+      <h2 class="section-header">Future Work</h2>
+      <p>To address the described challenges, we are currently implementing Visual Odometry to supplement and reinforce our real-time pose estimation. Integrating Visual Odometry will provide an additional data stream for fusion in our Extended Kalman Filter (EKF), improving robustness and accuracy. In parallel, we are developing the multi-threaded architecture required to deploy and manage over 10 Vectors concurrently from a single PC, further pushing toward scalable swarm operation.</p>
+    </section>
+  </main>
+
+  <!-- Right: GIF Column -->
+  <aside class="gif-column">
+    <div class="gif-sticky">
+      <img src="VectorAngularTurn - Made with Clipchamp.gif" alt="Vector Angular Turn" />
+      <img src="VectorAngularTurnIRL - Made with Clipchamp.gif" alt="Vector Angular Turn IRL" />
+    </div>
+  </aside>
+
+</body>
+</html>
