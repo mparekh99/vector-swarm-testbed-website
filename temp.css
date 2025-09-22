@@ -190,6 +190,23 @@ body {
   background-color: transparent;
 }
 
+.video-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* space between videos */
+  flex-wrap: wrap; /* allows wrapping on smaller screens */
+  margin: 20px 0;
+}
+
+.video-row video {
+  width: 45%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
 .gif-sticky {
   position: relative;
   padding-top: 115px;

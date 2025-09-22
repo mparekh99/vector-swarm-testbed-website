@@ -95,12 +95,18 @@
         <p>Initially, we implemented the PID controller, tuning its gains through trial and error to minimize oscillations and achieve smooth convergence toward the target. In our setup, the target is a detected Vector robot within the camera frame, and the PID controller iteratively adjusts the trajectory to reach it. Alternatively, we designed a Kinematic State Feedback Controller based on the standard motion model of a differential drive robot, applying a control law to directly regulate the robot’s position and orientation.</p>
 
 
-        <video width="500" height="300" controls>
-            <source src="Target Follow TWO - Made with Clipchamp.mp4" type="video/mp4">
-        </video>
-        <p></p>
+        <div class="video-row">
+          <video controls>
+            <source src="Small_Stat - Made with Clipchamp.mp4" type="video/mp4">
+          </video>
+
+          <video controls>
+            <source src="Small_Mov - Made with Clipchamp.mp4" type="video/mp4">
+          </video>
+        </div>
+
         <h4>Comparative Evaluation of Follow Methods</h4>
-        <p>To determine the best approach for Vector target following, we tested two scenarios, following a stationary target and following a moving target, as demonstrated in the video above. Each scenario was evaluated by running five iterations for both the PID and Kinematic controllers to ensure comprehensive coverage and reliable results.</p>
+        <p>To determine the best approach for Vector target following, we tested two scenarios, following a stationary target and following a moving target, as demonstrated in the videos above. Each scenario was evaluated by running five iterations for both the PID and Kinematic controllers to ensure comprehensive coverage and reliable results.</p>
 
         <h4 style="text-align: center;">Stationary Target Test</h4>
         <div class="image-pair">
@@ -148,12 +154,23 @@
         <img src="EKF_Y.png" alt="EKF Y" />
         </div>
 
-        <video width="500" height="400" controls>
+
+        <div style="transform: scale(0.8); transform-origin: top center; margin: 1rem 0;">
+          <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; overflow:hidden;">
+            <iframe 
+              src="https://www.youtube.com/embed/QOBxQInFjsE" 
+              frameborder="0" 
+              allowfullscreen 
+              style="position:absolute; width:100%; height:100%; left:0; top:0;">
+            </iframe>
+          </div>
+        </div>
+
+        <!-- <video width="500" height="400" controls>
             <source src="Longer_Vector_Vid - Made with Clipchamp (1).mp4" type="video/mp4">
-        </video>
+        </video> -->
         
      </section>
-     <p></p>
       <a class="github-button" href="https://github.com/mparekh99/vector-ekf-marker-localization" target="_blank" rel="noopener noreferrer">
           View Project Here
         </a>
