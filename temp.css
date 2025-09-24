@@ -11,6 +11,16 @@ body {
   margin-top: 20px;
 }
 
+.exa-logo {
+  width: 100px; /* adjust size */
+  margin-left: 50px; /* align with toc-column */
+  margin-top: 20px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+
+
 
 /* Table of Contents (Left Column) */
 .toc-column {

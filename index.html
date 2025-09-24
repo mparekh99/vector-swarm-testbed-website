@@ -9,36 +9,39 @@
   <link rel="stylesheet" href="temp.css" />
 </head>
 <body>
+<!-- 
+  <img src="EXA.png" class="exa-logo" alt="EXA Labs Logo"> -->
 
-  <!-- Left: Table of Contents -->
   <nav class="toc-column">
     <h2>Table of Contents</h2>
     <ul>
-      <li><a href="#overview" title="Overview">Overview</a></li>
-      <li><a href="#approach" title="Approach">Approach</a></li>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#approach">Approach</a></li>
       <ul>
-        <li><a href="#detection" title="Robot Detection">Robot Detection</a></li>
-        <li><a href="#distance" title="Distance Estimation">Distance Estimation</a></li>
-        <li><a href="#following" title="Target Following">Target Following</a></li>
-        <li><a href="#pose" title="Pose Estimation">Pose Estimation</a></li>
+        <li><a href="#detection">Robot Detection</a></li>
+        <li><a href="#distance">Distance Estimation</a></li>
+        <li><a href="#following">Target Following</a></li>
+        <li><a href="#pose">Pose Estimation</a></li>
       </ul>
-      <li><a href="#limitations" title="Limitations">Limitations</a></li>
-      <li><a href="#future" title="Future Work">Future Work</a></li>
+      <li><a href="#limitations">Limitations</a></li>
+      <li><a href="#future">Future Work</a></li>
     </ul>
   </nav>
+
 
   <!-- Middle: Main Content -->
   <main class="content-column">
     <h1>Scalable Swarm Robotics in GPS-Denied Environments</h1>
+    <p style="text-align: center;">Mihir Parekh, Advisor: Kshitij Jerath</p>
 
     <section id="overview">
       <h2 class="section-header">Overview</h2>
-      <p>Swarm algorithms have seen significant development in simulation environments; however real-world validation is essential for verifying their robustness, scalability, and performance under uncertainty. Simulation often abstracts away critical real-world constraints, while experimental testbeds bridge the gap, providing feedback on swarm theory and design. We propose a testbed using Anki Vector’s, commercially available differential drive mobile robots equipped with an HD Camera and their own processor enabling onboard compute. Our hope is to deliver a scalable swarm testbed that can operate in GPS-denied environments.</p>
+      <p>Swarm algorithms have seen significant development in simulation environments; however real-world validation is essential for verifying their robustness, scalability, and performance under uncertainty. Simulation often abstracts away critical real-world constraints, while experimental testbeds bridge the gap, providing feedback on swarm theory and design. We propose a testbed using Anki Vector’s, commercially available differential drive mobile robots equipped with an HD Camera and their own processor enabling onboard compute. Our objective is to deliver a scalable swarm testbed that can operate in GPS-denied environments.</p>
     </section>
 
     <section id="approach">
       <h2 class="section-header">Approach</h2>
-      <p>Emergent behavior refers to the collective behaviors that arise in multi-agent systems, such as bird flocking or the diamond formations seen in schools of fish. What makes these patterns remarkable is that they emerge from simple agents operating with minimal capabilities.</p>
+      <p>Emergent behavior refers to the collective behaviors that arise in multi-agent systems, such as bird flocking or fish schooling. What makes these patterns remarkable is that they emerge from simple agents operating with minimal capabilities.</p>
       <p>The Anki Vector, out of the box, is an AI-powered companion robot that can serve as a single agent within a swarm. To adapt it for our swarm application, we engineer the following local abilities:</p>
       <div style="text-align: center;">
         <ul style="display: inline-block; text-align: left;">
@@ -85,7 +88,7 @@
             </div>
         </div>
 
-        <img src="EstvsDist_Img.png" alt="Estimated vs Distance"/>
+        <img src="EstvsAct_img.png" alt="Estimated vs Distance"/>
         
         <p style="text-align: center;"><i>Data was collected by moving a stationary Vector robot away from the observing Vector’s camera in 10 mm increments. Distance estimates by the model were compared against tape measurements for front and side orientations.</i></p>
         <p>Overall, the model’s distance estimates were reasonably accurate but tended to overestimate distances at close range, likely due to the lack of camera calibration. Applying intrinsic camera calibration is expected to improve close-range accuracy.</p>
